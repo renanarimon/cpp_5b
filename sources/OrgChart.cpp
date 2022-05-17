@@ -28,103 +28,219 @@ namespace ariel
         return *this;
     }
     OrgChart::~OrgChart() {}
-    OrgChart OrgChart::add_root(std::string name) { 
-        if(this->_root){
+    OrgChart OrgChart::add_root(std::string name)
+    {
+        if (this->_root)
+        {
             this->_root->_data = name;
         }
-        else{
+        else
+        {
             this->_root = new Node(name);
         }
-        
-        return *this; }
 
+        return *this;
+    }
 
-    OrgChart OrgChart::add_sub(std::string employer, std::string employee) { 
-        
-        return *this; }
-    std::string *OrgChart::begin_level_order()
+    OrgChart OrgChart::add_sub(std::string employer, std::string employee)
     {
-        std::string a = "a";
-        std::string *ptr;
-        return ptr;
+        OrgChart::Node *boss = find(employer);
+        if (!boss)
+        {
+            throw std::invalid_argument("employer doesn't exist");
+        }
+        Node *n = new Node(employee);
+        boss->_children.push_back(n);
+        return *this;
     }
-    std::string *OrgChart::end_level_order()
+
+    OrgChart::iterator OrgChart::begin_level_order()
     {
-        std::string a = "a";
-        std::string *ptr;
-        return ptr;
+        return OrgChart::iterator("level", this->_root);
     }
-    std::string *OrgChart::begin_reverse_order()
+    OrgChart::iterator OrgChart::end_level_order()
     {
-        std::string a = "a";
-        std::string *ptr;
-        return ptr;
+        return OrgChart::iterator("end", nullptr);
     }
-    std::string *OrgChart::reverse_order()
+    OrgChart::iterator OrgChart::begin_reverse_order()
     {
-        std::string a = "a";
-        std::string *ptr;
-        return ptr;
+        return OrgChart::iterator("reverse", this->_root);
     }
-    std::string *OrgChart::begin_preorder()
+    OrgChart::iterator OrgChart::reverse_order()
     {
-        std::string a = "a";
-        std::string *ptr;
-        return ptr;
+        return OrgChart::iterator("end", nullptr);
     }
-    std::string *OrgChart::end_preorder()
+    OrgChart::iterator OrgChart::begin_preorder()
     {
-        std::string a = "a";
-        std::string *ptr;
-        return ptr;
+        return OrgChart::iterator("preOrder", this->_root);
     }
-    std::string *OrgChart::begin()
+    OrgChart::iterator OrgChart::end_preorder()
     {
-        std::string a = "a";
-        std::string *ptr;
-        return ptr;
+        return OrgChart::iterator("end", nullptr);
     }
-    std::string *OrgChart::end()
+    OrgChart::iterator OrgChart::begin()
     {
-        std::string a = "a";
-        std::string *ptr;
-        return ptr;
+        return OrgChart::iterator("level", this->_root);
+    }
+    OrgChart::iterator OrgChart::end()
+    {
+        return OrgChart::iterator("end", nullptr);
     }
 
     std::ostream &operator<<(std::ostream &out, const OrgChart &org)
     {
-        return out;
-    }
-
-    OrgChart::Node* OrgChart::find(std::string s){
-        if(!this->_root){
-            return nullptr;
-        }
-
-    }
-
-    void OrgChart::iterator::BFS(Node *root)
-    {
-        std::deque<Node*> q;
-        if (!root)
+        std::deque<OrgChart::Node *> q;
+        if (!org._root)
         {
             throw std::out_of_range("OrgChart is empty");
         }
-        // this->_order.clear();
+        // out << org._root->_data << "\n";
+        q.push_back(org._root);
+        while (!q.empty())
+        {
+            size_t len = q.size();
+            for (size_t i = 0; i < len; i++)
+            {
+                OrgChart::Node *tmp = q.front();
+                out << tmp->_data << "  ";
+                if (!tmp->_children.empty())
+                {
+                    for (OrgChart::Node *child : tmp->_children)
+                    {
+                        // out << child->_data << "    ";
+                        q.push_back(child);
+                    }
+                }
+                q.pop_front();
+            }
+            out << "\n";
+        }
 
-        q.push_back(root);
+        return out;
+    }
+
+    OrgChart::Node *OrgChart::find(std::string s)
+    {
+        if (!this->_root)
+        {
+            return nullptr;
+        }
+        std::deque<Node *> q;
+        q.push_back(this->_root);
 
         while (!q.empty())
         {
-            Node* tmp = q.front();
-            this->_order.push_back(tmp);
-            for(Node* child : tmp->_children){
+            Node *tmp = q.front();
+            if (tmp->_data == s)
+            {
+                return tmp;
+            }
+            for (Node *child : tmp->_children)
+            {
                 q.push_back(child);
             }
             q.pop_front();
         }
+        return nullptr;
+    }
+
+    void OrgChart::iterator::BFS(Node *root)
+    {
+        std::deque<Node *> q;
+        if (!root)
+        {
+            throw std::out_of_range("OrgChart is empty");
+        }
+        q.push_back(root);
+
+        while (!q.empty())
+        {
+            Node *tmp = q.front();
+            this->_order.push_back(tmp);
+            for (Node *child : tmp->_children)
+            {
+                q.push_back(child);
+            }
+            q.pop_front();
+        }
+    }
+
+    void OrgChart::iterator::Reverse_BFS(Node *root)
+    {
+        std::cout << "Reverse_BFS" << std::endl;
+        if (!root)
+        {
+            throw std::out_of_range("OrgChart is empty");
+        }
+        std::deque<Node *> q;
+        q.push_back(root);
+
+        while (!q.empty())
+        {
+            std::cout << "q: " << std::endl;
+            for (Node* a : q)
+            {
+                std::cout << a->_data << std::endl;
+            }
+            
+            Node *tmp = q.front();
+            q.pop_front();
+            std::cout<< "tmp: " << tmp->_data << std::endl;
+            this->_order.push_back(tmp);
+            if(!tmp->_children.empty()){
+                std::cout << "children[0]: " << tmp->_children.at(0)->_data<< std::endl;
+
+                for (size_t i=tmp->_children.size()-1; i>0; i--)
+                {
+                    std::cout<< tmp->_children.at(i)->_data << std::endl;
+                    q.push_back(tmp->_children.at(i));
+                }
+
+                
+                std::cout<<"size: "<< q.empty()<< std::endl;
+            }
+            
+        }
+        std::reverse(this->_order.begin(), this->_order.end());
+    }
+
+    /*iterator*/
+    OrgChart::iterator::iterator(std::string flag, OrgChart::Node *root)
+    : _flag(flag), _curr(root), _index(0){
+        _order.clear();
+        if(flag == "level"){
+            BFS(root);
+        }
+        else if(flag == "reverse"){
+            Reverse_BFS(root);
+        }
+        // else if(flag == "preOrder"){
+        //     PreOrder(root);
+        // }
         
     }
 
+    OrgChart::iterator::~iterator(){}
+    std::string &OrgChart::iterator::operator*() const{
+        return _curr->_data;
+    }
+    std::string *OrgChart::iterator::operator->() const{
+        return &(_curr->_data);
+    }
+    OrgChart::iterator &OrgChart::iterator::operator++(){
+        _curr = _order[_index++];
+        return *this;
+    }
+    const OrgChart::iterator OrgChart::iterator::operator++(int){
+        iterator tmp = *this;
+        (*this)++;
+        return tmp;
+    }
+    bool OrgChart::iterator::operator==(const OrgChart::iterator &other){
+        return this->_curr == other._curr;
+    }
+    bool OrgChart::iterator::operator!=(const OrgChart::iterator &other){
+        return this->_curr != other._curr;
+    }
 
 }

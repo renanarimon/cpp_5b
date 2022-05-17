@@ -15,6 +15,29 @@ namespace ariel
         Node(std::string& data) : _data(data){}
     };
 
+    public:
+        class iterator
+        {
+        private:
+            Node *_curr;
+            size_t _index;
+            std::deque<Node*> _order;
+            std::string _flag;
+            void BFS(Node* root);
+            void Reverse_BFS(Node* root);
+            void PreOrder(Node* root);
+
+        public:
+            iterator(std::string order, Node *root);
+            ~iterator();
+            std::string &operator*() const;
+            std::string *operator->() const;
+            iterator &operator++();
+            const iterator operator++(int);
+            bool operator==(const iterator &other);
+            bool operator!=(const iterator &other);
+        };
+
     private:
         Node *_root;
         friend std::ostream &operator<<(std::ostream &out, const OrgChart &org);
@@ -29,36 +52,19 @@ namespace ariel
         ~OrgChart();
         OrgChart add_root(std::string name);
         OrgChart add_sub(std::string employer, std::string employee);
-        std::string *begin_level_order();
-        std::string *end_level_order();
-        std::string *begin_reverse_order();
-        std::string *reverse_order();
-        std::string *begin_preorder();
-        std::string *end_preorder();
-        std::string *begin();
-        std::string *end();
+        iterator begin_level_order();
+        iterator end_level_order();
+        iterator begin_reverse_order();
+        iterator reverse_order();
+        iterator begin_preorder();
+        iterator end_preorder();
+        iterator begin();
+        iterator end();
         OrgChart::Node* find(std::string s);
+        
 
 
-        class iterator
-        {
-        private:
-            std::string *_curr;
-            std::deque<Node*> _order;
-            void BFS(Node* root);
-            void Reverse_BFS(Node* root);
-            void PreOrder(Node* root);
 
-        public:
-            iterator(std::string o, Node *root);
-            ~iterator();
-            std::string &operator*() const;
-            std::string *operator->() const;
-            iterator &operator++();
-            const iterator operator++(int);
-            bool operator==(const iterator &other);
-            bool operator!=(const iterator &other);
-        };
     };
 
 }
