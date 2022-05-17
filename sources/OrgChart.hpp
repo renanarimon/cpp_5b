@@ -11,6 +11,7 @@ namespace ariel
     {
         std::string _data;
         std::vector<Node *> _children;
+        Node* _next;
 
         Node(std::string& data) : _data(data){}
     };
@@ -20,12 +21,12 @@ namespace ariel
         {
         private:
             Node *_curr;
-            size_t _index;
-            std::deque<Node*> _order;
             std::string _flag;
             void BFS(Node* root);
             void Reverse_BFS(Node* root);
             void PreOrder(Node* root);
+            void reverse(Node* root);
+            
 
         public:
             iterator(std::string order, Node *root);
@@ -61,6 +62,8 @@ namespace ariel
         iterator begin();
         iterator end();
         OrgChart::Node* find(std::string s);
+
+        
         
 
 

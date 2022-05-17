@@ -1,5 +1,6 @@
 #include "OrgChart.hpp"
-// #include"Node.hpp"
+#include <algorithm>
+#include<stack>
 
 namespace ariel
 {
@@ -151,95 +152,128 @@ namespace ariel
         {
             throw std::out_of_range("OrgChart is empty");
         }
+
         q.push_back(root);
 
         while (!q.empty())
         {
             Node *tmp = q.front();
-            this->_order.push_back(tmp);
+            q.pop_front();
             for (Node *child : tmp->_children)
             {
                 q.push_back(child);
             }
-            q.pop_front();
+            tmp->_next = q.front();
         }
     }
 
     void OrgChart::iterator::Reverse_BFS(Node *root)
     {
-        std::cout << "Reverse_BFS" << std::endl;
+        std::deque<Node *> q;
         if (!root)
         {
             throw std::out_of_range("OrgChart is empty");
         }
-        std::deque<Node *> q;
+
         q.push_back(root);
 
         while (!q.empty())
         {
-            std::cout << "q: " << std::endl;
-            for (Node* a : q)
-            {
-                std::cout << a->_data << std::endl;
-            }
-            
             Node *tmp = q.front();
             q.pop_front();
-            std::cout<< "tmp: " << tmp->_data << std::endl;
-            this->_order.push_back(tmp);
-            if(!tmp->_children.empty()){
-                std::cout << "children[0]: " << tmp->_children.at(0)->_data<< std::endl;
+            std::reverse(tmp->_children.begin(), tmp->_children.end());
+            for (Node *child : tmp->_children)
+            {
+                q.push_back(child);
+            }
+            tmp->_next = q.front();
+        }
+        reverse(root);
+    }
+    void OrgChart::iterator::reverse(Node *root)
+    {
+        // Initialize current, previous and next pointers
+        Node *current = root;
+        Node *prev = NULL, *next = NULL;
 
-                for (size_t i=tmp->_children.size()-1; i>0; i--)
-                {
-                    std::cout<< tmp->_children.at(i)->_data << std::endl;
-                    q.push_back(tmp->_children.at(i));
-                }
+        while (current != NULL)
+        {
+            // Store next
+            next = current->_next;
+            // Reverse current node's pointer
+            current->_next = prev;
+            // Move pointers one position ahead.
+            prev = current;
+            current = next;
+        }
+        _curr = prev;
+    }
 
-                
-                std::cout<<"size: "<< q.empty()<< std::endl;
+    void OrgChart::iterator::PreOrder(Node *root)
+    {
+        if (!root){throw std::out_of_range("OrgChart is empty");}
+        std::stack<Node*> st;
+        st.push(root);
+        while (!st.empty())
+        {
+            Node* tmp = st.top();
+            st.pop();
+            std::reverse(tmp->_children.begin(), tmp->_children.end());
+            for (Node* child : tmp->_children)
+            {
+                st.push(child);
+            }
+            if(!st.empty()){
+                tmp->_next = st.top();
             }
             
         }
-        std::reverse(this->_order.begin(), this->_order.end());
     }
 
     /*iterator*/
     OrgChart::iterator::iterator(std::string flag, OrgChart::Node *root)
-    : _flag(flag), _curr(root), _index(0){
-        _order.clear();
-        if(flag == "level"){
+        : _flag(flag), _curr(root)
+    {
+        if (flag == "level")
+        {
             BFS(root);
         }
-        else if(flag == "reverse"){
+        else if (flag == "reverse")
+        {
             Reverse_BFS(root);
         }
-        // else if(flag == "preOrder"){
-        //     PreOrder(root);
-        // }
-        
+        else if (flag == "preOrder")
+        {
+            PreOrder(root);
+        }
     }
 
-    OrgChart::iterator::~iterator(){}
-    std::string &OrgChart::iterator::operator*() const{
+    OrgChart::iterator::~iterator() {}
+    std::string &OrgChart::iterator::operator*() const
+    {
         return _curr->_data;
     }
-    std::string *OrgChart::iterator::operator->() const{
+    std::string *OrgChart::iterator::operator->() const
+    {
         return &(_curr->_data);
     }
-    OrgChart::iterator &OrgChart::iterator::operator++(){
-        _curr = _order[_index++];
+    OrgChart::iterator &OrgChart::iterator::operator++()
+    {
+        _curr = _curr->_next;
         return *this;
     }
-    const OrgChart::iterator OrgChart::iterator::operator++(int){
+    const OrgChart::iterator OrgChart::iterator::operator++(int)
+    {
         iterator tmp = *this;
         (*this)++;
         return tmp;
     }
-    bool OrgChart::iterator::operator==(const OrgChart::iterator &other){
+    bool OrgChart::iterator::operator==(const OrgChart::iterator &other)
+    {
         return this->_curr == other._curr;
     }
-    bool OrgChart::iterator::operator!=(const OrgChart::iterator &other){
+    bool OrgChart::iterator::operator!=(const OrgChart::iterator &other)
+    {
         return this->_curr != other._curr;
     }
 
