@@ -238,7 +238,7 @@ namespace ariel
             }
             if (!st.empty())
             {
-                tmp->_nextR = st.top();
+                tmp->_nextP = st.top();
             }
         }
     }
