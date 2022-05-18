@@ -190,10 +190,9 @@ namespace ariel
         {
             Node *tmp = q.front();
             q.pop_front();
-            std::reverse(tmp->_children.begin(), tmp->_children.end());
-            for (Node *child : tmp->_children)
+            for (int i = tmp->_children.size()-1; i>=0; i--)
             {
-                q.push_back(child);
+                q.push_back(tmp->_children.at((size_t)i));
             }
             tmp->_nextR = q.front();
         }
@@ -231,10 +230,9 @@ namespace ariel
         {
             Node *tmp = st.top();
             st.pop();
-            std::reverse(tmp->_children.begin(), tmp->_children.end());
-            for (Node *child : tmp->_children)
+            for (int i = tmp->_children.size()-1; i>=0; i--)
             {
-                st.push(child);
+                st.push(tmp->_children.at((size_t)i));
             }
             if (!st.empty())
             {
