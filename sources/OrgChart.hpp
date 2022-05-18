@@ -11,9 +11,10 @@ namespace ariel
     {
         std::string _data;
         std::vector<Node *> _children;
-        Node* _next;
-
-        Node(std::string& data) : _data(data){}
+        Node* _nextL;
+        Node* _nextR;
+        Node* _nextP;
+        Node(std::string& data) : _data(data), _nextL(nullptr), _nextR(nullptr), _nextP(nullptr){}
     };
 
     public:
@@ -22,15 +23,22 @@ namespace ariel
         private:
             Node *_curr;
             std::string _flag;
+            int _h;
             void BFS(Node* root);
             void Reverse_BFS(Node* root);
             void PreOrder(Node* root);
             void reverse(Node* root);
+            int height(int start);
+            void givenLevel(Node *root, int level);
             
 
         public:
-            iterator(std::string order, Node *root);
+            iterator(std::string order, Node *root, int height);
             ~iterator();
+            iterator(iterator& other);
+            iterator(iterator&& other) noexcept;
+            iterator& operator=(const iterator& other);
+            iterator& operator=(iterator&& other) noexcept;
             std::string &operator*() const;
             std::string *operator->() const;
             iterator &operator++();
@@ -41,8 +49,8 @@ namespace ariel
 
     private:
         Node *_root;
+        int _height;
         friend std::ostream &operator<<(std::ostream &out, const OrgChart &org);
-        
         
     public:
         OrgChart();
@@ -62,6 +70,9 @@ namespace ariel
         iterator begin();
         iterator end();
         OrgChart::Node* find(std::string s);
+        Node* getRoot(){
+            return _root;
+        }
 
         
         

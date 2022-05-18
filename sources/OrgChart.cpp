@@ -1,30 +1,37 @@
 #include "OrgChart.hpp"
 #include <algorithm>
-#include<stack>
+#include <stack>
+#include<map>
+#include<queue>
 
 namespace ariel
 {
     OrgChart::OrgChart()
     {
         this->_root = nullptr;
+        this->_height = 0;
     }
     OrgChart::OrgChart(OrgChart &other)
     {
         this->_root = other._root;
+        this->_height = other._height;
     }
     OrgChart::OrgChart(OrgChart &&org) noexcept
     {
         this->_root = org._root;
+        this->_height = org._height;
         org._root = nullptr;
     }
     OrgChart &OrgChart::operator=(const OrgChart &org)
     {
         this->_root = org._root;
+        this->_height = org._height;
         return *this;
     }
     OrgChart &OrgChart::operator=(OrgChart &&org) noexcept
     {
         this->_root = org._root;
+        this->_height = org._height;
         org._root = nullptr;
         return *this;
     }
@@ -38,6 +45,7 @@ namespace ariel
         else
         {
             this->_root = new Node(name);
+            this->_height = 1; 
         }
 
         return *this;
@@ -51,41 +59,44 @@ namespace ariel
             throw std::invalid_argument("employer doesn't exist");
         }
         Node *n = new Node(employee);
+        if(n->_children.empty()){
+            this->_height++;
+        }
         boss->_children.push_back(n);
         return *this;
     }
 
     OrgChart::iterator OrgChart::begin_level_order()
     {
-        return OrgChart::iterator("level", this->_root);
+        return OrgChart::iterator("level", this->_root, this->_height);
     }
     OrgChart::iterator OrgChart::end_level_order()
     {
-        return OrgChart::iterator("end", nullptr);
+        return OrgChart::iterator("end", nullptr, this->_height);
     }
     OrgChart::iterator OrgChart::begin_reverse_order()
     {
-        return OrgChart::iterator("reverse", this->_root);
+        return OrgChart::iterator("reverse", this->_root, this->_height);
     }
     OrgChart::iterator OrgChart::reverse_order()
     {
-        return OrgChart::iterator("end", nullptr);
+        return OrgChart::iterator("end", nullptr, this->_height);
     }
     OrgChart::iterator OrgChart::begin_preorder()
     {
-        return OrgChart::iterator("preOrder", this->_root);
+        return OrgChart::iterator("preOrder", this->_root, this->_height);
     }
     OrgChart::iterator OrgChart::end_preorder()
     {
-        return OrgChart::iterator("end", nullptr);
+        return OrgChart::iterator("end", nullptr, this->_height);
     }
     OrgChart::iterator OrgChart::begin()
     {
-        return OrgChart::iterator("level", this->_root);
+        return begin_level_order();
     }
     OrgChart::iterator OrgChart::end()
     {
-        return OrgChart::iterator("end", nullptr);
+        return end_level_order();
     }
 
     std::ostream &operator<<(std::ostream &out, const OrgChart &org)
@@ -95,7 +106,6 @@ namespace ariel
         {
             throw std::out_of_range("OrgChart is empty");
         }
-        // out << org._root->_data << "\n";
         q.push_back(org._root);
         while (!q.empty())
         {
@@ -108,7 +118,6 @@ namespace ariel
                 {
                     for (OrgChart::Node *child : tmp->_children)
                     {
-                        // out << child->_data << "    ";
                         q.push_back(child);
                     }
                 }
@@ -163,7 +172,7 @@ namespace ariel
             {
                 q.push_back(child);
             }
-            tmp->_next = q.front();
+            tmp->_nextL = q.front();
         }
     }
 
@@ -186,7 +195,7 @@ namespace ariel
             {
                 q.push_back(child);
             }
-            tmp->_next = q.front();
+            tmp->_nextR = q.front();
         }
         reverse(root);
     }
@@ -194,46 +203,51 @@ namespace ariel
     {
         // Initialize current, previous and next pointers
         Node *current = root;
-        Node *prev = NULL, *next = NULL;
+        Node *prev = nullptr, *next = nullptr;
 
-        while (current != NULL)
+        while (current != nullptr)
         {
             // Store next
-            next = current->_next;
+            next = current->_nextR;
             // Reverse current node's pointer
-            current->_next = prev;
+            current->_nextR = prev;
             // Move pointers one position ahead.
             prev = current;
             current = next;
         }
+
         _curr = prev;
     }
 
     void OrgChart::iterator::PreOrder(Node *root)
     {
-        if (!root){throw std::out_of_range("OrgChart is empty");}
-        std::stack<Node*> st;
+        if (!root)
+        {
+            throw std::out_of_range("OrgChart is empty");
+        }
+        std::stack<Node *> st;
         st.push(root);
         while (!st.empty())
         {
-            Node* tmp = st.top();
+            Node *tmp = st.top();
             st.pop();
             std::reverse(tmp->_children.begin(), tmp->_children.end());
-            for (Node* child : tmp->_children)
+            for (Node *child : tmp->_children)
             {
                 st.push(child);
             }
-            if(!st.empty()){
-                tmp->_next = st.top();
+            if (!st.empty())
+            {
+                tmp->_nextR = st.top();
             }
-            
         }
     }
 
     /*iterator*/
-    OrgChart::iterator::iterator(std::string flag, OrgChart::Node *root)
-        : _flag(flag), _curr(root)
+    OrgChart::iterator::iterator(std::string flag, OrgChart::Node *root, int height)
+        : _flag(flag), _curr(root), _h(height)
     {
+
         if (flag == "level")
         {
             BFS(root);
@@ -248,7 +262,9 @@ namespace ariel
         }
     }
 
-    OrgChart::iterator::~iterator() {}
+    OrgChart::iterator::~iterator() {
+        this->_curr = nullptr;
+    }
     std::string &OrgChart::iterator::operator*() const
     {
         return _curr->_data;
@@ -257,9 +273,44 @@ namespace ariel
     {
         return &(_curr->_data);
     }
+    OrgChart::iterator::iterator(iterator &other)
+    {
+        this->_curr = other._curr;
+        this->_flag = other._flag;
+    }
+    OrgChart::iterator::iterator(iterator &&other) noexcept
+    {
+        this->_curr = other._curr;
+        this->_flag = other._flag;
+        other._curr = nullptr;
+    }
+    OrgChart::iterator &OrgChart::iterator::operator=(const iterator &other)
+    {
+        this->_curr = other._curr;
+        this->_flag = other._flag;
+        return *this;
+    }
+    OrgChart::iterator& OrgChart::iterator::operator=(iterator&& other) noexcept{ //TODO
+        this->_curr = other._curr;
+        this->_flag = other._flag;
+        other._curr = nullptr;
+        return *this;
+    }
+
     OrgChart::iterator &OrgChart::iterator::operator++()
     {
-        _curr = _curr->_next;
+        if (_flag == "level")
+        {
+            _curr = _curr->_nextL;
+        }
+        else if (_flag == "reverse")
+        {
+            _curr = _curr->_nextR;
+        }
+        else if (_flag == "preOrder")
+        {
+            _curr = _curr->_nextP;
+        }
         return *this;
     }
     const OrgChart::iterator OrgChart::iterator::operator++(int)
@@ -276,5 +327,6 @@ namespace ariel
     {
         return this->_curr != other._curr;
     }
+
 
 }
