@@ -2,7 +2,6 @@
 #include <iostream>
 #include <vector>
 #include <deque>
-// #include "Node.hpp"
 namespace ariel
 {   
     class OrgChart
@@ -15,6 +14,12 @@ namespace ariel
         Node* _nextR;
         Node* _nextP;
         Node(std::string& data) : _data(data), _nextL(nullptr), _nextR(nullptr), _nextP(nullptr){}
+        ~Node(){}
+        Node(const Node& other);
+        Node& operator=(const Node& other);
+        Node(Node&& other) noexcept;
+        Node& operator=(Node&& other) noexcept;
+
     };
 
     public:
@@ -23,17 +28,14 @@ namespace ariel
         private:
             Node *_curr;
             std::string _flag;
-            int _h;
             void BFS(Node* root);
             void Reverse_BFS(Node* root);
             void PreOrder(Node* root);
             void reverse(Node* root);
-            int height(int start);
-            void givenLevel(Node *root, int level);
             
 
         public:
-            iterator(std::string order, Node *root, int height);
+            iterator(std::string order, Node *root);
             ~iterator();
             iterator(iterator& other);
             iterator(iterator&& other) noexcept;
@@ -49,7 +51,12 @@ namespace ariel
 
     private:
         Node *_root;
-        int _height;
+        iterator* _startL;
+        iterator* _endL;
+        iterator* _startR;
+        iterator* _endR;
+        iterator* _startP;
+        iterator* _endP;
         friend std::ostream &operator<<(std::ostream &out, const OrgChart &org);
         
     public:
@@ -59,10 +66,10 @@ namespace ariel
         OrgChart &operator=(const OrgChart &org);     // copy assignment operator
         OrgChart &operator=(OrgChart &&org) noexcept; // move assignment operator
         ~OrgChart();
-        OrgChart add_root(std::string name);
-        OrgChart add_sub(std::string employer, std::string employee);
-        iterator begin_level_order();
-        iterator end_level_order();
+        OrgChart& add_root(std::string name);
+        OrgChart& add_sub(std::string employer, std::string employee);
+        iterator& begin_level_order();
+        iterator& end_level_order();
         iterator begin_reverse_order();
         iterator reverse_order();
         iterator begin_preorder();
