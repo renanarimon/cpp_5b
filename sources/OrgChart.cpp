@@ -1,44 +1,72 @@
 #include "OrgChart.hpp"
 #include <algorithm>
 #include <stack>
-#include<map>
-#include<queue>
+#include <map>
+#include <queue>
 
 namespace ariel
 {
+    /*------------ Node constructors & destructor ------------*/
 
-    OrgChart::Node::Node(const Node& other)
-         :_data(other._data), _nextL(other._nextL), _nextR(other._nextR), _nextP(other._nextP){
+    /*constructor*/
+    OrgChart::Node::Node(std::string &data) : _data(data), _nextL(nullptr), _nextR(nullptr), _nextP(nullptr) {}
+
+    /*destructor*/
+    OrgChart::Node::~Node()
+    {
+        for (Node *child : this->_children)
+        {
+            delete child;
+        }
+    }
+
+    /*copy constructor*/
+    OrgChart::Node::Node(const Node &other)
+        : _data(other._data), _nextL(other._nextL), _nextR(other._nextR), _nextP(other._nextP)
+    {
         std::vector<Node *> v;
-        for(Node* child: other._children){
+        for (Node *child : other._children)
+        {
             v.push_back(child);
         }
         this->_children = v;
     }
 
-    OrgChart::Node& OrgChart::Node::operator=(const Node& other){
-        this->_data = other._data;
-        std::vector<Node *> v;
-        for(Node* child: other._children){
-            v.push_back(child);
+
+    /*copy assignment operator - deep copy & assignment*/
+    OrgChart::Node &OrgChart::Node::operator=(const Node &other)
+    {
+        if (&other != this)
+        {
+            this->_data = other._data;
+            std::vector<Node *> v;
+            for (Node *child : other._children)
+            {
+                v.push_back(child);
+            }
+            this->_children = v;
+            this->_nextL = other._nextL;
+            this->_nextR = other._nextR;
+            this->_nextP = other._nextP;
         }
-        this->_children = v;
-        this->_nextL = other._nextL;
-        this->_nextR = other._nextR;
-        this->_nextP = other._nextP;
         return *this;
     }
-    OrgChart::Node::Node(Node&& other) noexcept
-    :   _data(std::move(other._data)), 
-        _children(std::move(other._children)),
-        _nextL(std::move(other._nextL)),
-        _nextR(std::move(other._nextR)),
-        _nextP(std::move(other._nextP)){}
-         
-    OrgChart::Node& OrgChart::Node::operator=(Node&& other) noexcept{
+
+    /*move constructor - copy constructor & delete other*/
+    OrgChart::Node::Node(Node &&other) noexcept
+        : _data(std::move(other._data)),
+          _children(std::move(other._children)),
+          _nextL(other._nextL),
+          _nextR(other._nextR),
+          _nextP(other._nextP) {}
+
+    /*move assignment operator - copy & assign & delete other*/
+    OrgChart::Node &OrgChart::Node::operator=(Node &&other) noexcept
+    {
         this->_data = other._data;
         std::vector<Node *> v;
-        for(Node* child: other._children){
+        for (Node *child : other._children)
+        {
             v.push_back(child);
         }
         this->_children = v;
@@ -46,54 +74,65 @@ namespace ariel
         this->_nextR = other._nextR;
         this->_nextP = other._nextP;
         std::move(other._data);
-        std::move(other._nextL);
-        std::move(other._nextR);
-        std::move(other._nextP);
         return *this;
     }
 
+    /*-------- OrgChart constructors & destructor --------*/
+    
+    /*constructor*/
     OrgChart::OrgChart()
     {
-        std::cout << "constructor OrgChart" << std::endl;
         this->_root = nullptr;
-        this->_startL = nullptr;
-        this->_endL = nullptr;
-        this->_startR = nullptr;
-        this->_endR = nullptr;
-        this->_startP = nullptr;
-        this->_endP = nullptr;
     }
+
+    /*destructor*/
+    OrgChart::~OrgChart()
+    {
+        delete this->_root;
+    }
+
+    /*copy constructor*/
     OrgChart::OrgChart(OrgChart &other)
     {
-        std::cout << "copy constructor OrgChart" << std::endl;
         this->_root = other._root;
     }
+
+    /*move constructor - copy constructor & delete other*/
     OrgChart::OrgChart(OrgChart &&org) noexcept
     {
-        std::cout << "OrgChart(OrgChart &&org) noexcept" << std::endl;
         this->_root = org._root;
         org._root = nullptr;
     }
+
+    /*copy assignment operator - deep copy & assignment*/
     OrgChart &OrgChart::operator=(const OrgChart &org)
     {
-        std::cout << "&OrgChart::operator=" << std::endl;
-        this->_root = org._root;
+        if (&org != this)
+        {
+            this->_root = org._root;
+        }
+
         return *this;
     }
+
+    /*move assignment operator - copy & assign & delete other*/
     OrgChart &OrgChart::operator=(OrgChart &&org) noexcept
     {
-        std::cout << "&OrgChart::operator=(OrgChart &&org)" << std::endl;
         this->_root = org._root;
         org._root = nullptr;
         return *this;
     }
-    OrgChart::~OrgChart() {
-        std::cout << "~OrgChart()" << std::endl;
-    }
-    OrgChart& OrgChart::add_root(std::string name)
+
+    /*------------ OrgChart Methods ------------*/
+    
+    /* add root:
+        if root not exist -> create new
+        else -> change name
+        @return: OrgChart&
+    */
+    OrgChart &OrgChart::add_root(std::string name)
     {
-        std::cout << "add_root: " << name << ", " << this << std::endl;
-        if (this->_root)
+        if (this->_root != nullptr)
         {
             this->_root->_data = name;
         }
@@ -101,79 +140,77 @@ namespace ariel
         {
             this->_root = new Node(name);
         }
-
         return *this;
     }
 
-    OrgChart& OrgChart::add_sub(std::string employer, std::string employee)
+    /*add sub:
+    @employer: node in tree
+    @employee: new node
+    if employer exist -> add employee as his child
+    else -> throw exception*/
+    OrgChart &OrgChart::add_sub(const std::string &employer, std::string employee)
     {
         OrgChart::Node *boss = find(employer);
-        if (!boss)
+        if (boss == nullptr)
         {
             throw std::invalid_argument("employer doesn't exist");
         }
-        std::cout << "add_sub: " << employee << " to: " << *this << std::endl;
         Node *n = new Node(employee);
-        if(n->_children.empty()){
-        }
         boss->_children.push_back(n);
         return *this;
     }
 
-    OrgChart::iterator& OrgChart::begin_level_order()
+    /*------------ begin & end iterator in OrgChart ------------*/
+
+    /*  begin: arranges the pointers & return new iterator to first node
+        end: return new iterator to after last node*/
+
+    OrgChart::iterator OrgChart::begin_level_order()
     {
-        if(!this->_root){throw std::invalid_argument("orgChart is empty");}
-        if(!this->_startL){
-            std::cout << "!this->_startL: " << this->getRoot()->_data << std::endl; 
-            iterator* iter = new OrgChart::iterator("level", this->_root);
-            this->_startL = iter;
-        }
-        return *this->_startL;
+        if (this->_root == nullptr){throw std::invalid_argument("orgChart is empty");}
+        return OrgChart::iterator("level", this->_root);
     }
-    OrgChart::iterator& OrgChart::end_level_order()
+    OrgChart::iterator OrgChart::end_level_order()
     {
-        if(!this->_root){throw std::invalid_argument("orgChart is empty");}
-        if(!this->_endL){
-            iterator* iter = new OrgChart::iterator("end", nullptr);
-            this->_endL = iter;
-        }
-        return *this->_endL;
+        if (this->_root == nullptr){throw std::invalid_argument("orgChart is empty");}
+        return OrgChart::iterator("end", nullptr);
     }
     OrgChart::iterator OrgChart::begin_reverse_order()
     {
-        if(!this->_root){throw std::invalid_argument("orgChart is empty");}
+        if (this->_root == nullptr){throw std::invalid_argument("orgChart is empty");}
         return OrgChart::iterator("reverse", this->_root);
     }
     OrgChart::iterator OrgChart::reverse_order()
     {
-        if(!this->_root){throw std::invalid_argument("orgChart is empty");}
+        if (this->_root == nullptr){throw std::invalid_argument("orgChart is empty");}
         return OrgChart::iterator("end", nullptr);
     }
     OrgChart::iterator OrgChart::begin_preorder()
     {
-        if(!this->_root){throw std::invalid_argument("orgChart is empty");}
+        if (this->_root == nullptr){throw std::invalid_argument("orgChart is empty");}
         return OrgChart::iterator("preOrder", this->_root);
     }
     OrgChart::iterator OrgChart::end_preorder()
     {
-        if(!this->_root){throw std::invalid_argument("orgChart is empty");}
+        if (this->_root == nullptr){throw std::invalid_argument("orgChart is empty");}
         return OrgChart::iterator("end", nullptr);
     }
     OrgChart::iterator OrgChart::begin()
     {
-        if(!this->_root){throw std::invalid_argument("orgChart is empty");}
+        if (this->_root == nullptr){throw std::invalid_argument("orgChart is empty");}
         return begin_level_order();
     }
     OrgChart::iterator OrgChart::end()
     {
-        if(!this->_root){throw std::invalid_argument("orgChart is empty");}
+        if (this->_root == nullptr){throw std::invalid_argument("orgChart is empty");}
         return end_level_order();
     }
 
+    /*cout operator*/
     std::ostream &operator<<(std::ostream &out, const OrgChart &org)
     {
         std::deque<OrgChart::Node *> q;
-        if (!org._root)
+        if (org._root == nullptr)
         {
             throw std::out_of_range("OrgChart is empty");
         }
@@ -200,9 +237,11 @@ namespace ariel
         return out;
     }
 
-    OrgChart::Node *OrgChart::find(std::string s)
+    /* find the first accuracy of this name
+        @return: Node* */
+    OrgChart::Node *OrgChart::find(const std::string &s)
     {
-        if (!this->_root)
+        if (this->_root == nullptr)
         {
             return nullptr;
         }
@@ -225,19 +264,20 @@ namespace ariel
         return nullptr;
     }
 
+    /*BFS - level order*/
     void OrgChart::iterator::BFS(Node *root)
     {
         std::deque<Node *> q;
-        if (!root)
+        if (root == nullptr)
         {
             throw std::out_of_range("OrgChart is empty");
         }
 
         q.push_back(root);
-
+        Node *tmp = nullptr;
         while (!q.empty())
         {
-            Node *tmp = q.front();
+            tmp = q.front();
             q.pop_front();
             for (Node *child : tmp->_children)
             {
@@ -245,35 +285,48 @@ namespace ariel
             }
             tmp->_nextL = q.front();
         }
+        if (tmp != nullptr)
+        {
+            tmp->_nextL = nullptr;
+        }
     }
 
+    /*Reverse_BFS - reverse level order*/
     void OrgChart::iterator::Reverse_BFS(Node *root)
     {
         std::deque<Node *> q;
-        if (!root)
+        if (root == nullptr)
         {
             throw std::out_of_range("OrgChart is empty");
         }
 
         q.push_back(root);
-
+        Node *tmp = nullptr;
         while (!q.empty())
         {
-            Node *tmp = q.front();
+            tmp = q.front();
             q.pop_front();
-            for (int i = tmp->_children.size()-1; i>=0; i--)
+            for (int i = (int)tmp->_children.size() - 1; i >= 0; i--)
             {
                 q.push_back(tmp->_children.at((size_t)i));
             }
             tmp->_nextR = q.front();
         }
+        if (tmp != nullptr)
+        {
+            tmp->_nextR = nullptr;
+        }
+
         reverse(root);
     }
+
+    /* reverse linked list - help func to 'Reverse_BFS' */
     void OrgChart::iterator::reverse(Node *root)
     {
         // Initialize current, previous and next pointers
         Node *current = root;
-        Node *prev = nullptr, *next = nullptr;
+        Node *prev = nullptr;
+        Node *next = nullptr;
 
         while (current != nullptr)
         {
@@ -285,23 +338,21 @@ namespace ariel
             prev = current;
             current = next;
         }
-
-        _curr = prev;
+        _curr = prev; // iterator _curr point to prev
     }
 
+    /* PreOrder */
     void OrgChart::iterator::PreOrder(Node *root)
     {
-        if (!root)
-        {
-            throw std::out_of_range("OrgChart is empty");
-        }
+        if (root == nullptr){throw std::out_of_range("OrgChart is empty");}
         std::stack<Node *> st;
         st.push(root);
+        Node *tmp = nullptr;
         while (!st.empty())
         {
-            Node *tmp = st.top();
+            tmp = st.top();
             st.pop();
-            for (int i = tmp->_children.size()-1; i>=0; i--)
+            for (int i = (int)tmp->_children.size() - 1; i >= 0; i--)
             {
                 st.push(tmp->_children.at((size_t)i));
             }
@@ -310,14 +361,18 @@ namespace ariel
                 tmp->_nextP = st.top();
             }
         }
+        if (tmp != nullptr)
+        {
+            tmp->_nextP = nullptr;
+        }
     }
 
-    /*iterator*/
-    OrgChart::iterator::iterator(std::string flag, OrgChart::Node *root)
+    /*-------- iterator constructors & destructor --------*/
+
+    /*constructor - arrange nodes by flag*/
+    OrgChart::iterator::iterator(const std::string &flag, OrgChart::Node *root)
         : _flag(flag), _curr(root)
     {
-        std::cout << "consructor iter: "<< flag << ", root: " << root << std::endl;
-
         if (flag == "level")
         {
             BFS(root);
@@ -332,46 +387,63 @@ namespace ariel
         }
     }
 
-    OrgChart::iterator::~iterator() {
+    /*destructor*/
+    OrgChart::iterator::~iterator()
+    {
         this->_curr = nullptr;
-        std::cout << "~iterator()" << std::endl;
+        std::move(this->_flag);
     }
-    std::string &OrgChart::iterator::operator*() const
-    {
-        return _curr->_data;
-    }
-    std::string *OrgChart::iterator::operator->() const
-    {
-        return &(_curr->_data);
-    }
+
+    /*copy constructor*/
     OrgChart::iterator::iterator(iterator &other)
     {
-        std::cout << "copy iterator" << std::endl;
         this->_curr = other._curr;
         this->_flag = other._flag;
     }
+
+    /*move constructor - copy constructor & delete other*/
     OrgChart::iterator::iterator(iterator &&other) noexcept
     {
-        std::cout << "iterator(iterator &&other)" << std::endl;
         this->_curr = other._curr;
         this->_flag = other._flag;
         other._curr = nullptr;
     }
+
+    /*copy assignment operator - deep copy & assignment*/
     OrgChart::iterator &OrgChart::iterator::operator=(const iterator &other)
     {
-        std::cout << "operator=(const iterator &other)" << std::endl;
-        this->_curr = other._curr;
-        this->_flag = other._flag;
+        if (&other != this)
+        {
+            this->_curr = other._curr;
+            this->_flag = other._flag;
+        }
+
         return *this;
     }
-    OrgChart::iterator& OrgChart::iterator::operator=(iterator&& other) noexcept{ //TODO
-        std::cout << "operator=(iterator&& other)" << std::endl;
+
+    /*move assignment operator - copy & assign & delete other*/
+    OrgChart::iterator &OrgChart::iterator::operator=(iterator &&other) noexcept
+    { 
         this->_curr = other._curr;
         this->_flag = other._flag;
         other._curr = nullptr;
         return *this;
     }
 
+    /*------------ iterator operators ------------*/
+    
+
+    std::string &OrgChart::iterator::operator*() const
+    {
+        return _curr->_data;
+    }
+
+    std::string *OrgChart::iterator::operator->() const
+    {
+        return &(_curr->_data);
+    }
+
+    /* increament iterator by flag (iter++) */
     OrgChart::iterator &OrgChart::iterator::operator++()
     {
         if (_flag == "level")
@@ -388,20 +460,23 @@ namespace ariel
         }
         return *this;
     }
-    const OrgChart::iterator OrgChart::iterator::operator++(int)
+
+    /* increament iterator by flag (++iter) */
+    OrgChart::iterator OrgChart::iterator::operator++(int)
     {
         iterator tmp = *this;
         (*this)++;
         return tmp;
     }
+
     bool OrgChart::iterator::operator==(const OrgChart::iterator &other)
     {
         return this->_curr == other._curr;
     }
+    
     bool OrgChart::iterator::operator!=(const OrgChart::iterator &other)
     {
         return this->_curr != other._curr;
     }
-
 
 }

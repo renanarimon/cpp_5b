@@ -38,8 +38,7 @@ TEST_CASE("BUILD_ORG"){
         std::vector<std::string> v = {"shir", "tal", "sapir", "ido", "avi", "yossi", "dan", "ziv", "shaked", "ofer"};
         size_t i = 0;
         for(auto it = org.begin_level_order(); it != org.end_level_order(); ++it){
-            // CHECK(*it == v[i++]);
-            std::cout << *it << std::endl;
+            CHECK_EQ(*it, v.at(i++));
         }
     
     
@@ -50,109 +49,94 @@ TEST_CASE("BUILD_ORG"){
         
 
         /*check level order with 1 name tree*/
-        for(auto it1 = org_double_names.begin_level_order(); it1 != org_double_names.end_level_order(); ++it1){
-            CHECK(*it1 == "adi");
+        for(auto it = org_double_names.begin_level_order(); it != org_double_names.end_level_order(); ++it){
+            CHECK(*it == "adi");
         }
+    
+        /* check iter size*/
+        std::vector<int> nums = {4, 3, 5, 3, 3, 5, 3, 3, 6, 4};
+        int j = 0;
+        for(auto it = org.begin_level_order(); it != org.end_level_order(); ++it){
+            CHECK_EQ(it->size(), nums.at((size_t)j));
+            j++;
+        }
+
     }
-    
-    
-
-        // /* check iter size*/
-        // std::vector<int> nums = {4, 3, 5, 3, 3, 5, 3, 3, 6, 4};
-        // int j = 0;
-        // int k =0;
-        // for(auto it2 = org.begin_level_order(); it2 != org.end_level_order(); ++it2){
-        //     std::cout << *it2 << std::endl;
-        //     // std::cout << *it2 << std::endl;
-        //     // CHECK_EQ(it->size(), nums.at((size_t)j));
-        //     // CHECK(it->size() == nums[(size_t)j]);
-        //     // j++;
-        // }
-
-    // }
 
     SUBCASE("reverse_level_order"){
         /*check reverse level order with normal tree*/
         std::vector<std::string> v = {"shaked", "ofer", "ziv", "avi", "yossi", "dan", "tal", "sapir", "ido", "shir"};
         size_t i = 0;
         for(auto it = org.begin_reverse_order(); it != org.reverse_order(); ++it){
-            // CHECK(*it3 == v[i++]);
-            std::cout << *it << std::endl;
+            CHECK_EQ(*it, v.at(i++));
         }
-    }
+    
     
 
-    //     /*check reverse level order with empty tree*/
-    //     CHECK_THROWS_MESSAGE(org_empty.begin_reverse_order(), "chart is empty!");
-    //     CHECK_THROWS_MESSAGE(org_empty.reverse_order(), "chart is empty!");
+        /*check reverse level order with empty tree*/
+        CHECK_THROWS_MESSAGE(org_empty.begin_reverse_order(), "chart is empty!");
+        CHECK_THROWS_MESSAGE(org_empty.reverse_order(), "chart is empty!");
 
-    //     /*check reverse level order with 1 name tree*/
-    //     for(auto it = org_double_names.begin_reverse_order(); it != org_double_names.reverse_order(); ++it){
-    //         CHECK(*it == "adi");
-    //     }
+        /*check reverse level order with 1 name tree*/
+        for(auto it = org_double_names.begin_reverse_order(); it != org_double_names.reverse_order(); ++it){
+            CHECK(*it == "adi");
+        }
 
-    //     /* check iter size*/
-    //     std::vector<size_t> nums = {6, 4, 3, 3, 5, 3, 3, 5, 3, 4};
-    //     i = 0;
-    //     for(auto it = org.begin_reverse_order(); it != org.reverse_order(); ++it){
-    //         std::cout << i++ << std::endl;
-    //         // CHECK(*it == v[i++]);
-    //     }
+        /* check iter size*/
+        std::vector<size_t> nums = {6, 4, 3, 3, 5, 3, 3, 5, 3, 4};
+        int j = 0;
+        for(auto it = org.begin_reverse_order(); it != org.reverse_order(); ++it){
+            CHECK_EQ(it->size(), nums.at((size_t)j));
+            j++;
+        }
 
-    // }
+    }
 
-    // SUBCASE("PreOrder"){
-    //     /*check PreOrder with normal tree*/
-    //     std::vector<std::string> v = {"shir", "tal", "avi", "yossi", "sapir", "dan", "ziv", "shaked", "ofer", "ido"};
-    //     size_t i = 0;
-    //     for(auto it = org.begin_preorder(); it != org.end_preorder(); ++it){
-    //         CHECK(*it == v[i++]);
-    //     }
+    SUBCASE("PreOrder"){
+        /*check PreOrder with normal tree*/
+        std::vector<std::string> v = {"shir", "tal", "avi", "yossi", "sapir", "dan", "ziv", "shaked", "ofer", "ido"};
+        size_t i = 0;
+        for(auto it = org.begin_preorder(); it != org.end_preorder(); ++it){
+            CHECK_EQ(*it, v.at(i++));
+        }
 
-    //     /*check PreOrder with empty tree*/
-    //     CHECK_THROWS_MESSAGE(org_empty.begin_preorder(), "chart is empty!");
-    //     CHECK_THROWS_MESSAGE(org_empty.end_preorder(), "chart is empty!");
+        /*check PreOrder with empty tree*/
+        CHECK_THROWS_MESSAGE(org_empty.begin_preorder(), "chart is empty!");
+        CHECK_THROWS_MESSAGE(org_empty.end_preorder(), "chart is empty!");
 
-    //     /*check PreOrder with 1 name tree*/
-    //     for(auto it = org_double_names.begin_preorder(); it != org_double_names.end_preorder(); ++it){
-    //         CHECK(*it == "adi");
-    //     }
-    //     /* check iter size*/
-    //     std::vector<size_t> nums = {4, 3, 3, 5, 5, 3, 3, 6, 4, 3};
-    //     i = 0;
-    //     for(auto it = org.begin_preorder(); it != org.end_preorder(); ++it){
-    //         CHECK(it->size() == nums[i++]);
-    //     }
-    // }
+        /*check PreOrder with 1 name tree*/
+        for(auto it = org_double_names.begin_preorder(); it != org_double_names.end_preorder(); ++it){
+            CHECK(*it == "adi");
+        }
+        /* check iter size*/
+        std::vector<size_t> nums = {4, 3, 3, 5, 5, 3, 3, 6, 4, 3};
+        int j = 0;
+        for(auto it = org.begin_preorder(); it != org.end_preorder(); ++it){
+            CHECK_EQ(it->size(), nums.at((size_t)j));
+            j++;
+        }
+    }
 
-    // SUBCASE("special"){
-    //     OrgChart org_special;
-    //     CHECK_NOTHROW(org_special.add_root("boss"));
-    //     CHECK_NOTHROW(org_special.add_root("boss1"));
-    //     CHECK_NOTHROW(org_special.add_root("boss2"));
-    //     CHECK_NOTHROW(org_special.add_root("boss3"));
-    //     CHECK_NOTHROW(org_special.add_root("boss4"));
-    //     CHECK_NOTHROW(org_special.add_root("boss5"));
-    //     CHECK_NOTHROW(org_special.add_root("boss6"));
+    SUBCASE("special"){
+        OrgChart org_special;
+        CHECK_NOTHROW(org_special.add_root("boss"));
+        CHECK_NOTHROW(org_special.add_root("boss1"));
+        CHECK_NOTHROW(org_special.add_root("boss2"));
+        CHECK_NOTHROW(org_special.add_root("boss3"));
+        CHECK_NOTHROW(org_special.add_root("boss4"));
+        CHECK_NOTHROW(org_special.add_root("boss5"));
+        CHECK_NOTHROW(org_special.add_root("boss6"));
 
-    //     /*check that org size is 1, and root is the last*/
-    //     int i =0; 
-    //     for(auto it = org_special.begin_preorder(); it != org_special.end_preorder(); ++it){
-    //         CHECK(*it == "boss6");
-    //         CHECK(i==0);
-    //         i++;
-    //     }
-
-
-    // }
+        /*check that org size is 1, and root is the last*/
+        int i =0; 
+        for(auto it = org_special.begin_preorder(); it != org_special.end_preorder(); ++it){
+            CHECK(*it == "boss6");
+            CHECK(i==0);
+            i++;
+        }
 
 
-
-
-
-
-
-
+    }
 
 
 
